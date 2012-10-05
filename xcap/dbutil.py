@@ -1,4 +1,4 @@
-
+#-*- coding: utf-8 -*-
 # Copyright (c) 2007-2010 AG Projects. See LICENSE for details.
 #
 
@@ -11,7 +11,8 @@ from hashlib import md5
 from twisted.enterprise import adbapi
 from twisted.python import reflect
 
-db_modules = {"mysql": "MySQLdb"}
+db_modules = {"mysql": "MySQLdb",
+              "postgres":"psycopg2"}
 
 def make_random_etag(uri):
     return md5("%s%s%s" % (uri, time.time(), random.random())).hexdigest()
@@ -75,6 +76,15 @@ def connectionForURI(uri):
         kwargs.setdefault('passwd', password or '')
         kwargs.setdefault('db', db)
         args = ()
+    elif module == 'psycopg2':
+        kwargs.setdefault('host', host or 'localhost')
+        kwargs.setdefault('user', user or '')
+        kwargs.setdefault('password', password or '')
+        kwargs.setdefault('database', db)
+        kwargs.setdefault('port', port or 5432)
+        #FIXME: include sslmode/async make sure reconnect works and tout ça tout
+        #ça i.e psycopg2 works (it seems to work)
+        args = ()
 
     if 'reconnect' not in kwargs:
         # note that versions other than 1.2.2 of MySQLdb don't provide reconnect parameter.
@@ -135,4 +145,3 @@ if __name__=='__main__':
 
     d = repeat_on_error(1, Exception, bad_func)
     d.addCallbacks(*getcb('bad_func'))
-
